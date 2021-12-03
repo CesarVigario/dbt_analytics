@@ -1,3 +1,15 @@
+{{ 
+    config(
+        partition_by = {
+        'field': 'churn_month',
+        'data_type': 'date',
+        'granularity': 'month'
+        },
+        cluster_by = 'company_id',
+        schema = 'reporting'
+    ) 
+}}
+
 select 
     DATE_TRUNC(DATE(user_leaved_time), MONTH) as churn_month,
     c.company_id,
@@ -9,8 +21,3 @@ from {{ ref('stg_company') }} c
 join {{ ref('stg_users') }} u on u.company_id = c.company_id -- dont' need left join because u.company_id cannot be null
 group by signup_month, company_id
 order by company_id, signup_month
-
--- tests
--- user_leaved_time > user_signuped_time -- this is a source test
--- members_count > 0
--- company_tier in A, B, C

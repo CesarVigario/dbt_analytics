@@ -1,3 +1,15 @@
+{{ 
+    config(
+        partition_by = {
+        'field': 'month_',
+        'data_type': 'date',
+        'granularity': 'month'
+        },
+        cluster_by = 'company_id',
+        schema = 'reporting'
+    ) 
+}}
+
 select 
     c.month_,
     c.company_id,
