@@ -1,5 +1,8 @@
 {{ 
     config(
+        materialized='incremental',
+        unique_key = 'activity_month',
+        incremental_strategy='merge',
         partition_by = {
         'field': 'activity_month',
         'data_type': 'date',
@@ -21,5 +24,10 @@ select
 from {{ ref('stg_company') }} c
 join {{ ref('stg_users') }} u on u.company_id = c.company_id -- dont' need left join because u.company_id cannot be null
 join {{ ref('stg_user_event') }} e on e.id_user = u.id_user
+{% if is_incremental() %}
+-- if incremental only compute date from the current month 
+-- merge strategy will entirely overwrite matched rows with new values.
+  where DATE(event_datetime) >= date_trunc(current_date(), Month)
+{% endif %}
 group by activity_month, company_id
 order by company_id, activity_month
