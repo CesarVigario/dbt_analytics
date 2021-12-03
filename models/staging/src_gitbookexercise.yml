@@ -1,0 +1,48 @@
+version: 2
+
+sources:
+  - name: gitbookexercise
+    description: Data source coming from a product called GitBookExercise.
+    database: gitbook-analytics
+    schema: itw_test
+    loader: 'stitch'
+    loaded_at_field: _extracted_at
+    freshness: 
+          warn_after: {count: 12, period: hour} # warn after no new values ater 12 hours.
+          error_after: {count: 24, period: hour} # raise an error after 24 hours if no new rows are extracted.
+    tables:
+      - name: users
+        description: Lists of users.
+        columns:
+          - name: user_id
+            description: Identifies the user of the product.
+          - name: company_id
+            description: Refers to the company table
+            tests:
+              - not_null
+
+      - name: company
+        description: List of all companies.
+        columns:
+          - name: company_id
+            description: Identifies the company.
+            tests:
+              - not_null
+              
+      - name: user_event
+        description: A table to record in-app user activities.
+        freshness:
+          warn_after: {count: 2, period: hour} # warn after no new values ater 2 hours.
+          error_after: {count: 4, period: hour} # error after 4 hours without any new row.
+        columns:
+          - name: user_id
+            description: Identifies the user who performed the event.
+            tests:
+              - not_null
+          - name: event_name
+            description: Name of the event.
+            tests:
+              - not_null
+          - name: event_datetime
+            tests:
+              - unique 

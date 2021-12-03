@@ -1,0 +1,135 @@
+version: 2
+
+models:
+  - name: user_event_last_30_days
+    description: Table with the number of times a user performed an event and the last occurence date based on the last 30 days of events.
+    tests:
+      - dbt_expectations.expect_table_row_count_to_equal:  # to know if table is emptyu - a similar test was created in tests folder
+          value: 1
+          group_by: [user_id]
+    columns:
+      - name: user_id
+        description: Identifies the user who performed the event.
+        tests:
+          - not_null
+          - dbt_utils.relationships_where: # it points to the stg_users
+                to: ref('stg_users')
+                field: user_id
+
+  - name: company_mau
+    description: Table with the number of Monthly Active Users per month per company.
+    tests:
+      - dbt_utils.unique_combination_of_columns: # one unique record for pair (company_id, activity_month)
+          combination_of_columns:
+            - activity_month
+            - company_id
+    columns:
+      - name: activity_month
+        description: Month when the user perfomed at least one event.
+        tests:
+          - not_null
+      - name: company_id
+        decription: Identifies the company.
+        tests:
+          - not_null
+          - dbt_utils.relationships_where: # it points to the stg_company
+                to: ref('stg_company')
+                field: company_id
+      - name: company_tier
+        description: Tier of the company based on the number of users.
+        tests:
+          - accepted_values:
+              values: ['A', 'B', 'C']
+      - name: members_count
+        description: Number of users in a company.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: company_monthly_signups
+    description: Table with the number of signups per month per company.
+    tests:
+      - dbt_utils.unique_combination_of_columns: # one unique record for pair (company_id, signup_month)
+          combination_of_columns:
+            - signup_month
+            - company_id
+    columns:
+      - name: signup_month
+        description: Month when the user signed up.
+        tests:
+          - not_null
+      - name: company_id
+        decription: Identifies the company.
+        tests:
+          - not_null
+          - dbt_utils.relationships_where: # it points to the stg_company
+                to: ref('stg_company')
+                field: company_id
+      - name: company_tier
+        description: Tier of the company based on the number of users.
+        tests:
+          - accepted_values:
+              values: ['A', 'B', 'C']
+      - name: signups_count
+        description: Number of users in a company who signed in.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+
+  - name: company_monthly_churns
+    description: Table with the number of users who left per month per company.
+    tests:
+      - dbt_utils.unique_combination_of_columns: # one unique record for pair (company_id, churn_month)
+          combination_of_columns:
+            - churn_month
+            - company_id
+    columns:
+      - name: churn_month
+        description: Month when the user left the company.
+        tests:
+          - not_null
+      - name: company_id
+        decription: Identifies the company.
+        tests:
+          - not_null
+          - dbt_utils.relationships_where: # it points to the stg_company
+                to: ref('stg_company')
+                field: company_id
+      - name: company_tier
+        description: Tier of the company based on the number of users.
+        tests:
+          - accepted_values:
+              values: ['A', 'B', 'C']
+      - name: churn_count
+        description: Number of users in a company who left.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0
+  - name: company_monthly_actual
+    description: Table with the difference between the users who signed in and the users who left.
+    tests:
+      - dbt_utils.unique_combination_of_columns: # one unique record for pair (company_id, month_)
+          combination_of_columns:
+            - month_
+            - company_id
+    columns:
+      - name: month_
+        tests:
+          - not_null
+      - name: company_id
+        decription: Identifies the company.
+        tests:
+          - not_null
+          - dbt_utils.relationships_where: # it points to the stg_company
+                to: ref('stg_company')
+                field: company_id
+      - name: company_tier
+        description: Tier of the company based on the number of users.
+        tests:
+          - accepted_values:
+              values: ['A', 'B', 'C']
+      - name: actual_members_count
+        description: Number of users in a company that not left.
+        tests:
+          - dbt_utils.accepted_range:
+              min_value: 0

@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: stg_users
+    description: This model cleans up customer data
+    tests:
+      - dbt_utils.expression_is_true:
+          expression: "user_leaved_time > user_signuped_time or user_leaved_time is null"
+    columns:
+      - name: user_id
+        description: Identifies the user of the product.
+        tests:
+          - not_null
+      - name: company_id
+        description: Refers to the company table
+        tests:
+            - not_null
+            - dbt_utils.relationships_where: # it points to the stg_company
+                to: ref('stg_company')
+                field: company_id
+
+  - name: stg_company
+    description: List of all companies
+    columns:
+      - name: company_id
+        description: Identifies the company.
+        tests:
+          - not_null
+
+  - name: stg_user_event
+    description: A table to record in-app user activities
+    columns:
+      - name: user_id
+        description: Identifies the user who performed the event.
+        tests:
+            - not_null
+            - dbt_utils.relationships_where: # it points to the stg_users
+                to: ref('stg_users')
+                field: user_id
